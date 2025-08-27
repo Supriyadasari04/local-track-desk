@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard - TMS</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="dashboard">
+        <header class="dashboard-header">
+            <div class="dashboard-nav">
+                <h1>Customer Dashboard</h1>
+                <div class="dashboard-actions">
+                    <span id="welcomeText" class="welcome-text"></span>
+                    <button id="logoutBtn" class="btn btn--outline">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-main">
+            <div class="dashboard-content">
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <h3>My Tickets</h3>
+                        <p class="stat-number" id="totalTickets">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending</h3>
+                        <p class="stat-number" id="pendingTickets">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Resolved</h3>
+                        <p class="stat-number" id="resolvedTickets">0</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2>My Tickets</h2>
+                        <button id="createTicketBtn" class="btn btn--primary">Create Ticket</button>
+                    </div>
+                    <div id="ticketsList" class="tickets-list"></div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h2>Inbox</h2>
+                    <div id="emailsList" class="emails-list"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Ticket Modal -->
+    <div id="createTicketModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Ticket</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <form id="createTicketForm" class="modal-form">
+                <div class="form-group">
+                    <label for="ticketSubject" class="form-label">Subject</label>
+                    <select id="ticketSubject" name="subject" class="form-select" required>
+                        <option value="">Select subject</option>
+                        <option value="Login Issue">Login Issue</option>
+                        <option value="Password Reset">Password Reset</option>
+                        <option value="Account Access">Account Access</option>
+                        <option value="Technical Problem">Technical Problem</option>
+                        <option value="Feature Request">Feature Request</option>
+                        <option value="Bug Report">Bug Report</option>
+                        <option value="General Inquiry">General Inquiry</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="customSubjectGroup" style="display: none;">
+                    <label for="customSubject" class="form-label">Custom Subject</label>
+                    <input type="text" id="customSubject" name="customSubject" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" name="description" class="form-textarea" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="priority" class="form-label">Priority</label>
+                    <select id="priority" name="priority" class="form-select" required>
+                        <option value="">Select priority</option>
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn--outline" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Create Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" style="display: none;">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="js/storageService.js"></script>
+    <script src="js/authService.js"></script>
+    <script src="js/ticketService.js"></script>
+    <script src="js/emailService.js"></script>
+    <script src="js/uiService.js"></script>
+    <script>
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            if (!authService.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            currentUser = authService.getLoggedInUser();
+            if (currentUser.role !== 'customer') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Initialize page
+            initializePage();
+            loadData();
+
+            // Event listeners
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('createTicketBtn').addEventListener('click', showCreateModal);
+            document.getElementById('closeModal').addEventListener('click', hideCreateModal);
+            document.getElementById('cancelBtn').addEventListener('click', hideCreateModal);
+            document.getElementById('createTicketForm').addEventListener('submit', createTicket);
+            
+            // Subject change handler
+            document.getElementById('ticketSubject').addEventListener('change', function() {
+                const customSubjectGroup = document.getElementById('customSubjectGroup');
+                if (this.value === 'Other') {
+                    customSubjectGroup.style.display = 'block';
+                    document.getElementById('customSubject').required = true;
+                } else {
+                    customSubjectGroup.style.display = 'none';
+                    document.getElementById('customSubject').required = false;
+                }
+            });
+
+            // Storage event listener for cross-tab sync
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'tms_tickets' || e.key === 'tms_emails') {
+                    loadData();
+                }
+            });
+        });
+
+        function initializePage() {
+            document.getElementById('welcomeText').textContent = `Welcome, ${currentUser.username}!`;
+        }
+
+        function loadData() {
+            loadTickets();
+            loadEmails();
+            updateStats();
+        }
+
+        function loadTickets() {
+            const tickets = ticketService.getTicketsForUser(currentUser.id, currentUser.role);
+            const ticketsList = document.getElementById('ticketsList');
+            
+            if (tickets.length === 0) {
+                ticketsList.innerHTML = '<p class="empty-state">No tickets found. Create your first ticket!</p>';
+                return;
+            }
+
+            ticketsList.innerHTML = tickets.map(ticket => `
+                <div class="ticket-card">
+                    <div class="ticket-header">
+                        <h4>${ticket.id}</h4>
+                        <span class="status-badge status--${ticket.status}">${ticket.status}</span>
+                    </div>
+                    <div class="ticket-content">
+                        <h5>${ticket.subject}</h5>
+                        <p>${ticket.description}</p>
+                        <div class="ticket-meta">
+                            <span class="priority priority--${ticket.priority.toLowerCase()}">${ticket.priority} Priority</span>
+                            <span class="date">Created: ${new Date(ticket.createdAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadEmails() {
+            const emails = emailService.getEmailsForUser(currentUser.id);
+            const emailsList = document.getElementById('emailsList');
+            
+            if (emails.length === 0) {
+                emailsList.innerHTML = '<p class="empty-state">No messages</p>';
+                return;
+            }
+
+            emailsList.innerHTML = emails.map(email => `
+                <div class="email-card ${email.isRead ? '' : 'email-card--unread'}">
+                    <div class="email-header">
+                        <h4>${email.subject}</h4>
+                        <span class="email-date">${new Date(email.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <p class="email-body">${email.body}</p>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const tickets = ticketService.getTicketsForUser(currentUser.id, currentUser.role);
+            document.getElementById('totalTickets').textContent = tickets.length;
+            document.getElementById('pendingTickets').textContent = tickets.filter(t => t.status === 'pending').length;
+            document.getElementById('resolvedTickets').textContent = tickets.filter(t => t.status === 'resolved').length;
+        }
+
+        function showCreateModal() {
+            document.getElementById('createTicketModal').style.display = 'flex';
+        }
+
+        function hideCreateModal() {
+            document.getElementById('createTicketModal').style.display = 'none';
+            document.getElementById('createTicketForm').reset();
+            document.getElementById('customSubjectGroup').style.display = 'none';
+        }
+
+        function createTicket(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            let subject = formData.get('subject');
+            
+            if (subject === 'Other') {
+                subject = formData.get('customSubject');
+            }
+            
+            const ticketData = {
+                subject: subject,
+                description: formData.get('description'),
+                priority: formData.get('priority'),
+                createdBy: currentUser.id
+            };
+
+            const ticket = ticketService.createTicket(ticketData);
+            uiService.showToast(`Ticket ${ticket.id} created successfully!`, 'success');
+            
+            hideCreateModal();
+            loadData();
+        }
+
+        function logout() {
+            authService.logout();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

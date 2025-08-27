@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TMS</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Welcome Back</h1>
+                <p>Sign in to your account</p>
+            </div>
+            
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                    <span class="form-error" id="emailError"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" required>
+                    <span class="form-error" id="passwordError"></span>
+                </div>
+                
+                <button type="submit" class="btn btn--primary btn--full">Sign In</button>
+                
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="signup.html">Sign up</a></p>
+                    <p><a href="index.html">Back to Home</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" style="display: none;">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="js/storageService.js"></script>
+    <script src="js/authService.js"></script>
+    <script src="js/uiService.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already logged in
+            if (authService.isAuthenticated()) {
+                const user = authService.getLoggedInUser();
+                window.location.href = `${user.role}.html`;
+                return;
+            }
+
+            const form = document.getElementById('loginForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const loginData = {
+                    email: formData.get('email'),
+                    password: formData.get('password')
+                };
+                
+                const result = authService.login(loginData);
+                
+                if (result.success) {
+                    uiService.showToast('Login successful!', 'success');
+                    setTimeout(() => {
+                        window.location.href = `${result.user.role}.html`;
+                    }, 1000);
+                } else {
+                    uiService.showToast(result.error, 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
