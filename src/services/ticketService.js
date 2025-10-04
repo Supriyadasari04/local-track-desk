@@ -2,18 +2,10 @@ import {
   getAllTickets, 
   saveTicket, 
   getTicketById, 
-  getTicketsByUserId,
-  Ticket 
+  getTicketsByUserId
 } from './storageService';
 export { getAllTickets } from './storageService';
 import { createEmail } from './emailService';
-
-export interface CreateTicketData {
-  subject: string;
-  description: string;
-  priority: 'Low' | 'Medium' | 'High';
-  createdBy: string;
-}
 
 // Default ticket subjects
 export const DEFAULT_SUBJECTS = [
@@ -28,7 +20,7 @@ export const DEFAULT_SUBJECTS = [
 ];
 
 // Generate unique ticket ID
-export const generateTicketId = (): string => {
+export const generateTicketId = () => {
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
   
@@ -40,8 +32,8 @@ export const generateTicketId = (): string => {
   return `TCKT-${dateStr}-${nextNumber}`;
 };
 
-export const createTicket = (data: CreateTicketData): Ticket => {
-  const ticket: Ticket = {
+export const createTicket = (data) => {
+  const ticket = {
     id: generateTicketId(),
     subject: data.subject,
     description: data.description,
@@ -65,7 +57,7 @@ export const createTicket = (data: CreateTicketData): Ticket => {
   return ticket;
 };
 
-export const assignTicket = (ticketId: string, agentId: string): void => {
+export const assignTicket = (ticketId, agentId) => {
   const ticket = getTicketById(ticketId);
   if (!ticket) return;
   
@@ -84,12 +76,12 @@ export const assignTicket = (ticketId: string, agentId: string): void => {
   });
 };
 
-export const updateTicketStatus = (ticketId: string, status: string): void => {
+export const updateTicketStatus = (ticketId, status) => {
   const ticket = getTicketById(ticketId);
   if (!ticket) return;
   
   const oldStatus = ticket.status;
-  ticket.status = status as any;
+  ticket.status = status;
   ticket.updatedAt = new Date().toISOString();
   
   saveTicket(ticket);
@@ -111,15 +103,15 @@ export const updateTicketStatus = (ticketId: string, status: string): void => {
   }));
 };
 
-export const getTicketsForUser = (userId: string, role: string): Ticket[] => {
+export const getTicketsForUser = (userId, role) => {
   return getTicketsByUserId(userId, role);
 };
 
-export const getTicketsByStatus = (status: string): Ticket[] => {
+export const getTicketsByStatus = (status) => {
   return getAllTickets().filter(t => t.status === status);
 };
 
-export const searchTickets = (query: string): Ticket[] => {
+export const searchTickets = (query) => {
   const tickets = getAllTickets();
   const lowercaseQuery = query.toLowerCase();
   

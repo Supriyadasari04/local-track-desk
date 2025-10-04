@@ -2,19 +2,11 @@ import {
   getAllEmails, 
   saveEmail, 
   getEmailsByUserId, 
-  markEmailAsRead,
-  Email 
+  markEmailAsRead
 } from './storageService';
 
-export interface CreateEmailData {
-  toUserId: string;
-  fromUserId: string;
-  subject: string;
-  body: string;
-}
-
-export const createEmail = (data: CreateEmailData): Email => {
-  const email: Email = {
+export const createEmail = (data) => {
+  const email = {
     id: `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     toUserId: data.toUserId,
     fromUserId: data.fromUserId,
@@ -35,17 +27,17 @@ export const createEmail = (data: CreateEmailData): Email => {
   return email;
 };
 
-export const getUserEmails = (userId: string): Email[] => {
+export const getUserEmails = (userId) => {
   return getEmailsByUserId(userId).sort((a, b) => 
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 };
 
-export const getUnreadCount = (userId: string): number => {
+export const getUnreadCount = (userId) => {
   return getEmailsByUserId(userId).filter(e => !e.isRead).length;
 };
 
-export const markAsRead = (emailId: string): void => {
+export const markAsRead = (emailId) => {
   markEmailAsRead(emailId);
   
   // Emit storage event for cross-tab sync

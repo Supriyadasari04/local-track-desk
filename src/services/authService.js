@@ -3,37 +3,23 @@ import {
   saveUser, 
   setCurrentUser, 
   clearCurrentUser, 
-  getCurrentUser,
-  User 
+  getCurrentUser
 } from './storageService';
 
-export interface SignupData {
-  email: string;
-  username: string;
-  password: string;
-  confirmPassword: string;
-  role: 'admin' | 'agent' | 'customer';
-}
-
-export interface LoginData {
-  email: string;
-  password: string;
-}
-
 // Validation functions
-export const validateEmail = (email: string): boolean => {
+export const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
-export const validatePassword = (password: string): boolean => {
+export const validatePassword = (password) => {
   // Minimum 8 characters, at least 1 digit
   const passwordRegex = /^(?=.*\d).{8,}$/;
   return passwordRegex.test(password);
 };
 
-export const validateSignup = (data: SignupData): string[] => {
-  const errors: string[] = [];
+export const validateSignup = (data) => {
+  const errors = [];
   
   if (!data.email) errors.push('Email is required');
   else if (!validateEmail(data.email)) errors.push('Invalid email format');
@@ -60,14 +46,14 @@ export const validateSignup = (data: SignupData): string[] => {
   return errors;
 };
 
-export const signup = (data: SignupData): { success: boolean; errors?: string[]; user?: User } => {
+export const signup = (data) => {
   const errors = validateSignup(data);
   
   if (errors.length > 0) {
     return { success: false, errors };
   }
   
-  const newUser: User = {
+  const newUser = {
     id: `user_${Date.now()}`,
     email: data.email,
     username: data.username,
@@ -83,7 +69,7 @@ export const signup = (data: SignupData): { success: boolean; errors?: string[];
   return { success: true, user: newUser };
 };
 
-export const login = (data: LoginData): { success: boolean; error?: string; user?: User } => {
+export const login = (data) => {
   if (!data.email || !data.password) {
     return { success: false, error: 'Email and password are required' };
   }
@@ -106,19 +92,19 @@ export const login = (data: LoginData): { success: boolean; error?: string; user
   return { success: true, user };
 };
 
-export const logout = (): void => {
+export const logout = () => {
   clearCurrentUser();
 };
 
-export const getLoggedInUser = (): User | null => {
+export const getLoggedInUser = () => {
   return getCurrentUser();
 };
 
-export const isAuthenticated = (): boolean => {
+export const isAuthenticated = () => {
   return getCurrentUser() !== null;
 };
 
-export const hasRole = (role: string): boolean => {
+export const hasRole = (role) => {
   const user = getCurrentUser();
   return user?.role === role;
 };

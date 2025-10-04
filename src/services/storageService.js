@@ -1,35 +1,4 @@
 // Local Storage Service for Ticket Management System
-export interface User {
-  id: string;
-  email: string;
-  username: string;
-  password: string;
-  role: 'admin' | 'agent' | 'customer';
-  createdAt: string;
-  isActive: boolean;
-}
-
-export interface Ticket {
-  id: string;
-  subject: string;
-  description: string;
-  priority: 'Low' | 'Medium' | 'High';
-  status: 'pending' | 'assigned' | 'in_progress' | 'resolved';
-  createdBy: string;
-  assignedTo?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Email {
-  id: string;
-  toUserId: string;
-  fromUserId: string;
-  subject: string;
-  body: string;
-  timestamp: string;
-  isRead: boolean;
-}
 
 // Storage Keys
 const STORAGE_KEYS = {
@@ -37,10 +6,10 @@ const STORAGE_KEYS = {
   TICKETS: 'tms_tickets',
   EMAILS: 'tms_emails',
   CURRENT_USER: 'tms_currentUserId'
-} as const;
+};
 
 // Utility functions for safe localStorage operations
-const safeGetItem = <T>(key: string, defaultValue: T): T => {
+const safeGetItem = (key, defaultValue) => {
   try {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
@@ -50,7 +19,7 @@ const safeGetItem = <T>(key: string, defaultValue: T): T => {
   }
 };
 
-const safeSetItem = (key: string, value: any): void => {
+const safeSetItem = (key, value) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
@@ -59,11 +28,11 @@ const safeSetItem = (key: string, value: any): void => {
 };
 
 // User Management
-export const getAllUsers = (): User[] => {
+export const getAllUsers = () => {
   return safeGetItem(STORAGE_KEYS.USERS, []);
 };
 
-export const saveUser = (user: User): void => {
+export const saveUser = (user) => {
   const users = getAllUsers();
   const existingIndex = users.findIndex(u => u.id === user.id);
   
@@ -76,39 +45,39 @@ export const saveUser = (user: User): void => {
   safeSetItem(STORAGE_KEYS.USERS, users);
 };
 
-export const deleteUser = (userId: string): void => {
+export const deleteUser = (userId) => {
   const users = getAllUsers().filter(u => u.id !== userId);
   safeSetItem(STORAGE_KEYS.USERS, users);
 };
 
-export const getUserById = (id: string): User | null => {
+export const getUserById = (id) => {
   return getAllUsers().find(u => u.id === id) || null;
 };
 
-export const getUserByEmail = (email: string): User | null => {
+export const getUserByEmail = (email) => {
   return getAllUsers().find(u => u.email === email) || null;
 };
 
 // Current User Management
-export const setCurrentUser = (userId: string): void => {
+export const setCurrentUser = (userId) => {
   safeSetItem(STORAGE_KEYS.CURRENT_USER, userId);
 };
 
-export const getCurrentUser = (): User | null => {
+export const getCurrentUser = () => {
   const userId = safeGetItem(STORAGE_KEYS.CURRENT_USER, null);
   return userId ? getUserById(userId) : null;
 };
 
-export const clearCurrentUser = (): void => {
+export const clearCurrentUser = () => {
   localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
 };
 
 // Ticket Management
-export const getAllTickets = (): Ticket[] => {
+export const getAllTickets = () => {
   return safeGetItem(STORAGE_KEYS.TICKETS, []);
 };
 
-export const saveTicket = (ticket: Ticket): void => {
+export const saveTicket = (ticket) => {
   const tickets = getAllTickets();
   const existingIndex = tickets.findIndex(t => t.id === ticket.id);
   
@@ -121,11 +90,11 @@ export const saveTicket = (ticket: Ticket): void => {
   safeSetItem(STORAGE_KEYS.TICKETS, tickets);
 };
 
-export const getTicketById = (id: string): Ticket | null => {
+export const getTicketById = (id) => {
   return getAllTickets().find(t => t.id === id) || null;
 };
 
-export const getTicketsByUserId = (userId: string, role: string): Ticket[] => {
+export const getTicketsByUserId = (userId, role) => {
   const tickets = getAllTickets();
   
   switch (role) {
@@ -141,21 +110,21 @@ export const getTicketsByUserId = (userId: string, role: string): Ticket[] => {
 };
 
 // Email Management
-export const getAllEmails = (): Email[] => {
+export const getAllEmails = () => {
   return safeGetItem(STORAGE_KEYS.EMAILS, []);
 };
 
-export const saveEmail = (email: Email): void => {
+export const saveEmail = (email) => {
   const emails = getAllEmails();
   emails.push(email);
   safeSetItem(STORAGE_KEYS.EMAILS, emails);
 };
 
-export const getEmailsByUserId = (userId: string): Email[] => {
+export const getEmailsByUserId = (userId) => {
   return getAllEmails().filter(e => e.toUserId === userId);
 };
 
-export const markEmailAsRead = (emailId: string): void => {
+export const markEmailAsRead = (emailId) => {
   const emails = getAllEmails();
   const email = emails.find(e => e.id === emailId);
   if (email) {
@@ -165,9 +134,9 @@ export const markEmailAsRead = (emailId: string): void => {
 };
 
 // Initialize sample data
-export const initializeSampleData = (): void => {
+export const initializeSampleData = () => {
   if (getAllUsers().length === 0) {
-    const sampleUsers: User[] = [
+    const sampleUsers = [
       {
         id: 'user_admin',
         email: 'admin@tms.com',

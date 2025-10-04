@@ -14,13 +14,13 @@ const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
+  const [errors, setErrors] = useState([]);
   const [formData, setFormData] = useState({
     email: '',
     username: '',
     password: '',
     confirmPassword: '',
-    role: 'customer' as 'admin' | 'agent' | 'customer'
+    role: 'customer'
   });
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const Signup = () => {
     }
   }, [navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrors([]);
@@ -51,17 +51,17 @@ const Signup = () => {
     setLoading(false);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
   };
 
-  const handleRoleChange = (value: string) => {
+  const handleRoleChange = (value) => {
     setFormData(prev => ({
       ...prev,
-      role: value as 'admin' | 'agent' | 'customer'
+      role: value
     }));
   };
 

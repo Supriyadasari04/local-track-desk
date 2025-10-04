@@ -4,28 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Clock, User, AlertCircle } from "lucide-react";
 
-export interface Ticket {
-  id: string;
-  subject: string;
-  description: string;
-  priority: 'Low' | 'Medium' | 'High';
-  status: 'pending' | 'assigned' | 'in_progress' | 'resolved';
-  createdBy: string;
-  assignedTo?: string;
-  createdAt: string;
-  updatedAt: string;
-  customerName?: string;
-  agentName?: string;
-}
-
-interface TicketCardProps {
-  ticket: Ticket;
-  userRole: 'admin' | 'agent' | 'customer';
-  agents?: Array<{ id: string; username: string }>;
-  onAssign?: (ticketId: string, agentId: string) => void;
-  onStatusChange?: (ticketId: string, status: string) => void;
-}
-
 const priorityColors = {
   Low: 'bg-accent-light text-accent-foreground',
   Medium: 'bg-warning/10 text-warning-foreground',
@@ -45,7 +23,7 @@ export const TicketCard = ({
   agents = [], 
   onAssign, 
   onStatusChange 
-}: TicketCardProps) => {
+}) => {
   return (
     <Card className="shadow-card hover:shadow-md transition-all duration-300">
       <CardHeader className="pb-3">
